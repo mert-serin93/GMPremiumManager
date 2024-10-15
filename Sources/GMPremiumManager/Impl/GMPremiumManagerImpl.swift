@@ -13,6 +13,10 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
     public var paywalls: PremiumManagerPaywall = [:]
     public var configurationBuilder: Adapty.Configuration.Builder?
 
+    public init() {
+
+    }
+
     public func activate(appInstanceId: String?) async throws {
         guard let configurationBuilder else { return }
         try await Adapty.activate(with: configurationBuilder)
