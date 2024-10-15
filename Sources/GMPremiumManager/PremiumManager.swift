@@ -11,7 +11,7 @@ import SwiftUI
 
 final public class PremiumManager: ObservableObject {
 
-    init(key: String, observerMode: Bool = false, idfaCollectionDisabled: Bool = false, customerUserId: String, ipAddressCollectionDisabled: Bool = false, implementation: GMPremiumManager = GMPremiumManagerImpl()) {
+    public init(key: String, observerMode: Bool = false, idfaCollectionDisabled: Bool = false, customerUserId: String, ipAddressCollectionDisabled: Bool = false, implementation: GMPremiumManager) {
 
         self.implementation = implementation
         self.implementation.configurationBuilder = Adapty.Configuration
@@ -23,9 +23,9 @@ final public class PremiumManager: ObservableObject {
         Adapty.delegate = self
     }
 
-    static func configure(key: String, observerMode: Bool = false, idfaCollectionDisabled: Bool = false, customerUserId: String, ipAddressCollectionDisabled: Bool = false, implementation: GMPremiumManager = GMPremiumManagerImpl()) {
+    public static func configure(key: String, observerMode: Bool = false, idfaCollectionDisabled: Bool = false, customerUserId: String, ipAddressCollectionDisabled: Bool = false, implementation: GMPremiumManager) {
         if shared == nil {
-            shared = PremiumManager(key: key, observerMode: observerMode, idfaCollectionDisabled: idfaCollectionDisabled, customerUserId: customerUserId, ipAddressCollectionDisabled: ipAddressCollectionDisabled)
+            shared = PremiumManager(key: key, observerMode: observerMode, idfaCollectionDisabled: idfaCollectionDisabled, customerUserId: customerUserId, ipAddressCollectionDisabled: ipAddressCollectionDisabled, implementation: implementation)
         } else {
             fatalError("Premium Manager can be initailized only once.")
         }
@@ -37,15 +37,15 @@ final public class PremiumManager: ObservableObject {
     @Published var isPremium = false
     var eventPassthrough: PassthroughSubject<Events, Never> = .init()
 
-    func activate(appInstanceId: String?) async throws {
+    public func activate(appInstanceId: String?) async throws {
         try await implementation.activate(appInstanceId: appInstanceId)
     }
 
-    func fetchAllPaywalls(for placements: [any Placements]) async throws {
+    public func fetchAllPaywalls(for placements: [any Placements]) async throws {
         try await implementation.fetchAllPaywalls(for: placements)
     }
 
-    func getPaywall(with placement: any Placements) -> PremiumManagerModel? {
+    public func getPaywall(with placement: any Placements) -> PremiumManagerModel? {
         return implementation.paywalls[placement.id] ?? nil
     }
 
@@ -58,11 +58,11 @@ final public class PremiumManager: ObservableObject {
         return try await implementation.fetchPaywallConfiguration(for: paywall)
     }
 
-    func logPaywallOpen(for paywall: AdaptyPaywall) async throws {
+    public func logPaywallOpen(for paywall: AdaptyPaywall) async throws {
         try await implementation.logPaywallOpen(for: paywall)
     }
 
-    func purchase(with product: AdaptyPaywallProduct, source: String) async throws {
+    public func purchase(with product: AdaptyPaywallProduct, source: String) async throws {
         do {
             try await implementation.purchase(with: product)
             if let profile = try? await fetchProfile() {
@@ -75,7 +75,7 @@ final public class PremiumManager: ObservableObject {
         }
     }
 
-    func fetchProfile() async throws -> AdaptyProfile {
+    public func fetchProfile() async throws -> AdaptyProfile {
         do {
             return try await implementation.fetchProfile()
         } catch {
@@ -83,7 +83,7 @@ final public class PremiumManager: ObservableObject {
         }
     }
 
-    func restorePurchase() async throws {
+    public func restorePurchase() async throws {
         do {
             let profile = try await implementation.restorePurchases()
             let isPremium = checkSubscriptionStatus(profile: profile)
@@ -94,7 +94,7 @@ final public class PremiumManager: ObservableObject {
         }
     }
 
-    func checkSubscriptionStatus(profile: AdaptyProfile) -> Bool {
+    public func checkSubscriptionStatus(profile: AdaptyProfile) -> Bool {
         let accessLevels = implementation.checkSubscriptionStatus(profile: profile)
         return isPremium(with: accessLevels)
     }

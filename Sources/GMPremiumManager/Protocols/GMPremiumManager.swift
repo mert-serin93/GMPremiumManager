@@ -7,7 +7,7 @@
 import Adapty
 import AdaptyUI
 
-protocol GMPremiumManager: AnyObject {
+public protocol GMPremiumManager: AnyObject {
     // Public API
     var paywalls: PremiumManagerPaywall { get set}
     var configurationBuilder: Adapty.Configuration.Builder? { get set }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol Placements: Hashable {
+public protocol Placements: Hashable {
     static var allCases: [Self] { get }
 
     var id: String { get }
@@ -21,10 +21,4 @@ extension Placements {
     static func == (lhs: Self, rhs: Self) -> Bool {
         return lhs.id == rhs.id
     }
-}
-
-enum AdaptyPlacements: String, Placements, CaseIterable {
-    case onboarding
-
-    var id: String { self.rawValue }
 }

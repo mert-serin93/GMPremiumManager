@@ -10,10 +10,10 @@ import Adapty
 
 final public class GMPremiumManagerImpl: GMPremiumManager {
 
-    var paywalls: PremiumManagerPaywall = [:]
-    var configurationBuilder: Adapty.Configuration.Builder?
+    public var paywalls: PremiumManagerPaywall = [:]
+    public var configurationBuilder: Adapty.Configuration.Builder?
 
-    func activate(appInstanceId: String?) async throws {
+    public func activate(appInstanceId: String?) async throws {
         guard let configurationBuilder else { return }
         do {
             try await Adapty.activate(with: configurationBuilder)
@@ -32,7 +32,7 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
         }
     }
 
-    func fetchAllPaywalls(for placements: [any Placements]) async throws {
+    public func fetchAllPaywalls(for placements: [any Placements]) async throws {
         do {
             let fetchedPaywalls = try await withThrowingTaskGroup(of: (String, PremiumManagerModel?).self) { group in
                 for placement in placements {
@@ -70,11 +70,11 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
         }
     }
 
-    func getPaywall(with placement: any Placements) -> PremiumManagerModel? {
+    public func getPaywall(with placement: any Placements) -> PremiumManagerModel? {
         return paywalls[placement.id] ?? nil
     }
 
-    func fetchPaywall(for placement: any Placements) async throws -> AdaptyPaywall? {
+    public func fetchPaywall(for placement: any Placements) async throws -> AdaptyPaywall? {
         try? await withCheckedThrowingContinuation { continuation in
             Adapty.getPaywall(placementId: placement.id) { result in
                 switch result {
@@ -89,7 +89,7 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
         }
     }
 
-    func fetchPaywallConfiguration(for paywall: AdaptyPaywall) async throws -> AdaptyUI.LocalizedViewConfiguration {
+    public func fetchPaywallConfiguration(for paywall: AdaptyPaywall) async throws -> AdaptyUI.LocalizedViewConfiguration {
         try await withCheckedThrowingContinuation { continuation in
             AdaptyUI.getViewConfiguration(forPaywall: paywall, loadTimeout: 15, { result in
                 switch result {
@@ -102,11 +102,11 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
         }
     }
 
-    func logPaywallOpen(for paywall: AdaptyPaywall) async throws {
+    public func logPaywallOpen(for paywall: AdaptyPaywall) async throws {
         try await Adapty.logShowPaywall(paywall)
     }
 
-    func purchase(with product: AdaptyPaywallProduct) async throws {
+    public func purchase(with product: AdaptyPaywallProduct) async throws {
         do {
             try await Adapty.makePurchase(product: product)
         } catch {
@@ -114,15 +114,15 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
         }
     }
 
-    func fetchProfile() async throws -> AdaptyProfile {
+    public func fetchProfile() async throws -> AdaptyProfile {
         return try await Adapty.getProfile()
     }
 
-    func restorePurchases() async throws -> AdaptyProfile {
+    public func restorePurchases() async throws -> AdaptyProfile {
         return try await Adapty.restorePurchases()
     }
 
-    func checkSubscriptionStatus(profile: AdaptyProfile) -> [String: AdaptyProfile.AccessLevel] {
+    public func checkSubscriptionStatus(profile: AdaptyProfile) -> [String: AdaptyProfile.AccessLevel] {
         return profile.accessLevels
     }
 }

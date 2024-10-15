@@ -8,8 +8,8 @@
 import Adapty
 import AdaptyUI
 
-typealias MappedProduct = AdaptyPaywallProduct
-typealias PremiumManagerPaywall = [String: PremiumManagerModel]
+public typealias MappedProduct = AdaptyPaywallProduct
+public typealias PremiumManagerPaywall = [String: PremiumManagerModel]
 
 public struct PremiumManagerModel {
     let paywall: AdaptyPaywall
