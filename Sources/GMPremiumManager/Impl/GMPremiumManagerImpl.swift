@@ -15,21 +15,16 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
 
     public func activate(appInstanceId: String?) async throws {
         guard let configurationBuilder else { return }
-        do {
-            try await Adapty.activate(with: configurationBuilder)
+        try await Adapty.activate(with: configurationBuilder)
 
-            if let appInstanceId = appInstanceId {
-                let builder = AdaptyProfileParameters.Builder()
-                    .with(firebaseAppInstanceId: appInstanceId)
+        if let appInstanceId = appInstanceId {
+            let builder = AdaptyProfileParameters.Builder()
+                .with(firebaseAppInstanceId: appInstanceId)
 
-                try? await Adapty.updateProfile(params: builder.build())
-            }
-
-            try await AdaptyUI.activate()
-        } catch {
-            #warning("Send error here")
-            // TO-DO send error
+            try? await Adapty.updateProfile(params: builder.build())
         }
+
+        try await AdaptyUI.activate()
     }
 
     public func fetchAllPaywalls(for placements: [any Placements]) async throws {
@@ -79,11 +74,9 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
             Adapty.getPaywall(placementId: placement.id) { result in
                 switch result {
                 case .success(let paywall):
-//                    continuation.resume(returning: paywall)
-                    break
+                    continuation.resume(returning: paywall)
                 case .failure(let error):
                     continuation.resume(throwing: error)
-                    break
                 }
             }
         }

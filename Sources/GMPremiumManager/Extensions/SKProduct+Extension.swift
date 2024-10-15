@@ -7,6 +7,6 @@
 
 import StoreKit
 
-extension SKProduct: Identifiable {
+extension SKProduct: @retroactive Identifiable {
     public var id: String { return self.productIdentifier }
 }

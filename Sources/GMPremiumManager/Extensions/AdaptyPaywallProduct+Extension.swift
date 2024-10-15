@@ -8,7 +8,7 @@
 import Adapty
 import Foundation
 
-extension AdaptyPaywallProduct: Identifiable {
+extension AdaptyPaywallProduct: @retroactive Identifiable {
     public var id: String { return self.vendorProductId }
 
     var name: String {
