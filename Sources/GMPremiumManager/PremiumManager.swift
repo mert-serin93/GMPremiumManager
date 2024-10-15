@@ -11,19 +11,7 @@ import SwiftUI
 
 class PremiumManager: ObservableObject {
 
-    enum Events {
-        case onAdaptyActivate
-        case onAdaptyUIActivated
-        case onErrorActivate(Error)
-
-        case onFetchPaywalls(PremiumManagerPaywall)
-
-        case onLoadProfile(AdaptyProfile)
-    }
-
-    init(key: String, observerMode: Bool = false, idfaCollectionDisabled: Bool = false, customerUserId: String, ipAddressCollectionDisabled: Bool = false, implementation: GMPremiumManager) {
-
-//        Adapty.delegate = self
+    init(key: String, observerMode: Bool = false, idfaCollectionDisabled: Bool = false, customerUserId: String, ipAddressCollectionDisabled: Bool = false, implementation: GMPremiumManager = GMPremiumManagerImpl()) {
 
         self.implementation = implementation
         self.implementation.configurationBuilder = Adapty.Configuration
@@ -32,8 +20,18 @@ class PremiumManager: ObservableObject {
             .with(idfaCollectionDisabled: idfaCollectionDisabled)
             .with(customerUserId: customerUserId)
             .with(ipAddressCollectionDisabled: ipAddressCollectionDisabled)
+        Adapty.delegate = self
     }
 
+    static func configure(key: String, observerMode: Bool = false, idfaCollectionDisabled: Bool = false, customerUserId: String, ipAddressCollectionDisabled: Bool = false, implementation: GMPremiumManager = GMPremiumManagerImpl()) {
+        if shared == nil {
+            shared = PremiumManager(key: key, observerMode: observerMode, idfaCollectionDisabled: idfaCollectionDisabled, customerUserId: customerUserId, ipAddressCollectionDisabled: ipAddressCollectionDisabled)
+        } else {
+            fatalError("Premium Manager can be initailized only once.")
+        }
+    }
+
+    static var shared: PremiumManager!
     private let implementation: GMPremiumManager
 
     @Published var isPremium = false
@@ -43,16 +41,17 @@ class PremiumManager: ObservableObject {
         try await implementation.activate(appInstanceId: appInstanceId)
     }
 
-    func fetchAllPaywalls(for placements: [Placements]) async throws {
+    func fetchAllPaywalls(for placements: [any Placements]) async throws {
         try await implementation.fetchAllPaywalls(for: placements)
     }
 
-    func getPaywall(with placement: Placements) -> PremiumManagerModel? {
-        return implementation.paywalls[placement] ?? nil
+    func getPaywall(with placement: any Placements) -> PremiumManagerModel? {
+        return implementation.paywalls[placement.id] ?? nil
     }
 
-    private func fetchPaywall(for placement: Placements) async throws -> AdaptyPaywall {
-        return try await implementation.fetchPaywall(for: placement)
+    private func fetchPaywall(for placement: any Placements) async throws -> AdaptyPaywall {
+        guard let paywall = try? await implementation.fetchPaywall(for: placement) else { throw PremiumManagerError.noRestore }
+        return paywall
     }
 
     private func fetchPaywallConfiguration(for paywall: AdaptyPaywall) async throws -> AdaptyUI.LocalizedViewConfiguration {
@@ -69,10 +68,10 @@ class PremiumManager: ObservableObject {
             if let profile = try? await fetchProfile() {
                 let isPremium = self.checkSubscriptionStatus(profile: profile)
                 self.isPremium = isPremium
-                #warning("Send got premium event here")
+                eventPassthrough.send(.onPurchaseCompleted(product, isPremium))
             }
         } catch {
-            #warning("Send error here")
+            eventPassthrough.send(.onPurchaseFailed(error))
         }
     }
 
@@ -80,7 +79,6 @@ class PremiumManager: ObservableObject {
         do {
             return try await implementation.fetchProfile()
         } catch {
-            #warning("Send error here")
             throw error
         }
     }
@@ -90,14 +88,13 @@ class PremiumManager: ObservableObject {
             let profile = try await implementation.restorePurchases()
             let isPremium = checkSubscriptionStatus(profile: profile)
             self.isPremium = isPremium
-            #warning("Send restore purchase event here")
+            eventPassthrough.send(.onRestoreCompleted)
         } catch {
-            #warning("Send error here")
-            throw error
+            eventPassthrough.send(.onRestoreFailed(error))
         }
     }
 
-    private func checkSubscriptionStatus(profile: AdaptyProfile) -> Bool {
+    func checkSubscriptionStatus(profile: AdaptyProfile) -> Bool {
         let accessLevels = implementation.checkSubscriptionStatus(profile: profile)
         return isPremium(with: accessLevels)
     }
@@ -105,7 +102,18 @@ class PremiumManager: ObservableObject {
     private func isPremium(with accessLevel: [String: AdaptyProfile.AccessLevel]) -> Bool {
         return accessLevel["premium"]?.isActive ?? false
     }
+}
 
+extension PremiumManager: AdaptyDelegate {
+    func didLoadLatestProfile(_ profile: AdaptyProfile) {
+        eventPassthrough.send(.onLoadProfile(profile))
+        isPremium = checkSubscriptionStatus(profile: profile)
+    }
+}
+
+
+// Helper for Facebook events
+extension PremiumManager {
     func shouldSendSubscribeEvent(for product: AdaptyPaywallProduct) -> Bool {
         if let subscriptionPeriod = product.subscriptionPeriod, subscriptionPeriod.unit == .year {
             return true
@@ -119,37 +127,42 @@ class PremiumManager: ObservableObject {
         }
         return false
     }
-
-//    private func determineEvents(with product: AdaptyProduct) {
-//        sendPurchaseFBSDK(product: product)
-//
-//        if let subscriptionPeriod = product.subscriptionPeriod, subscriptionPeriod.unit == .year {
-//            sendSubcribeFBSDK(product: product)
-//        }
-//
-//        if let introductoryOfferEligibility = product.introductoryDiscount, introductoryOfferEligibility.paymentMode == .freeTrial {
-//            sendAddToCartFBSDK(product: product)
-//        }
-//    }
-
-//    /// FBSDK events for every product purchase
-//    private func sendPurchaseFBSDK(product: AdaptyProduct) {
-//        AppEvents.shared.logPurchase(amount: Double(truncating: product.price as NSNumber), currency: product.currencyCode ?? "", parameters: [AppEvents.ParameterName.contentID : product.vendorProductId])
-//    }
-//
-//    /// FBSDK events for trial
-//    private func sendAddToCartFBSDK(product: AdaptyProduct) {
-//        AppEvents.shared.logEvent(.addedToCart, parameters: [.contentID: product.vendorProductId])
-//    }
-//
-//    /// FBSDK events for yearly subscriptions only
-//    private func sendSubcribeFBSDK(product: AdaptyProduct) {
-//        AppEvents.shared.logEvent(.subscribe, parameters: [.contentID: product.vendorProductId])
-//    }
 }
 
-extension PremiumManager: AdaptyDelegate {
-    func didLoadLatestProfile(_ profile: AdaptyProfile) {
-        eventPassthrough.send(.onLoadProfile(profile))
+extension PremiumManager {
+    enum Events {
+        case onAdaptyActivate
+        case onAdaptyUIActivated
+        case onErrorActivate(Error)
+
+        case onFetchPaywalls(PremiumManagerPaywall)
+        case onLoadProfile(AdaptyProfile)
+
+        case onPurchaseCompleted(AdaptyProduct, Bool)
+        case onPurchaseFailed(Error)
+
+        case onRestoreCompleted
+        case onRestoreFailed(Error)
+
+        // Adapty Paywall Builder Events
+        case apbCloseTapped(UIViewController)
+        case apbOpenURL(URL)
+        case apbCustomEvent(String)
+
+        case apbProductSelect(AdaptyPaywallProduct)
+
+        case apbDidPurchaseStart(AdaptyPaywallProduct)
+        case apbDidPurchaseFinished(AdaptyPaywallProduct, AdaptyPurchasedInfo)
+
+        case apbDidFailedPurchase(AdaptyPaywallProduct, AdaptyError)
+        case apbCancelPurchase(AdaptyPaywallProduct)
+
+        case apbRestoreStart
+        case apbRestoreSuccessful
+        case apbNoRestoreAvailable
+        case apbRestoreFailed(AdaptyError)
+
+        case apbFailedRendering(AdaptyError)
+
     }
 }

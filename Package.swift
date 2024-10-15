@@ -29,5 +29,6 @@ let package = Package(
             name: "GMPremiumManagerTests",
             dependencies: ["GMPremiumManager"]
         ),
-    ]
+    ],
+    swiftLanguageModes: [.v5]
 )

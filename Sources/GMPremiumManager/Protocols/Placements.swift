@@ -7,28 +7,24 @@
 
 import Foundation
 
-enum Placements: String, CaseIterable {
-    case defaultPlacement
+protocol Placements: Hashable {
+    static var allCases: [Self] { get }
+
+    var id: String { get }
 }
 
-//extension Placements {
-//    func hash(into hasher: inout Hasher) {
-//        hasher.combine(self.rawValue)
-//    }
-//}
+extension Placements {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.id)
+    }
 
-//protocol Placements: AnyObject, Hashable {
-//    var id: String { get }
-//}
-//
-//extension Placements {
-//    func hash(into hasher: inout Hasher) {
-//        hasher.combine(id)
-//    }
-//}
-//
-//extension Placements {
-//    static func == (lhs: Self, rhs: Self) -> Bool {
-//        return lhs.rawValue == rhs.rawValue
-//    }
-//}
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+enum AdaptyPlacements: String, Placements, CaseIterable {
+    case onboarding
+
+    var id: String { self.rawValue }
+}

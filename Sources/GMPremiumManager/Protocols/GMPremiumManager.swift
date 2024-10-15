@@ -13,9 +13,9 @@ protocol GMPremiumManager: AnyObject {
     var configurationBuilder: Adapty.Configuration.Builder? { get set }
 
     func activate(appInstanceId: String?) async throws
-    func fetchAllPaywalls(for placements: [Placements]) async throws
-    func getPaywall(with placement: Placements) -> PremiumManagerModel?
-    func fetchPaywall(for placement: Placements) async throws -> AdaptyPaywall
+    func fetchAllPaywalls(for placements: [any Placements]) async throws
+    func getPaywall(with placement: any Placements) -> PremiumManagerModel?
+    func fetchPaywall(for placement: any Placements) async throws -> AdaptyPaywall?
     func fetchPaywallConfiguration(for paywall: AdaptyPaywall) async throws -> AdaptyUI.LocalizedViewConfiguration
 
     func purchase(with product: AdaptyPaywallProduct) async throws

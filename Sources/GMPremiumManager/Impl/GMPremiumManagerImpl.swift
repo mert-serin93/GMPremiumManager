@@ -9,8 +9,9 @@ import Foundation
 import Adapty
 
 final class GMPremiumManagerImpl: GMPremiumManager {
+
     var paywalls: PremiumManagerPaywall = [:]
-    var configurationBuilder: Adapty.Configuration?
+    var configurationBuilder: Adapty.Configuration.Builder?
 
     func activate(appInstanceId: String?) async throws {
         guard let configurationBuilder else { return }
@@ -31,9 +32,9 @@ final class GMPremiumManagerImpl: GMPremiumManager {
         }
     }
 
-    func fetchAllPaywalls(for placements: [Placements]) async throws {
+    func fetchAllPaywalls(for placements: [any Placements]) async throws {
         do {
-            let fetchedPaywalls = try await withThrowingTaskGroup(of: (Placements, PremiumManagerModel?).self) { group in
+            let fetchedPaywalls = try await withThrowingTaskGroup(of: (String, PremiumManagerModel?).self) { group in
                 for placement in placements {
                     group.addTask {
                         if let paywall = try? await self.fetchPaywall(for: placement) {
@@ -48,25 +49,13 @@ final class GMPremiumManagerImpl: GMPremiumManager {
                                                             isPaywallBuilderEnabled: isPaywallBuilderEnabled,
                                                             configuration: configuration)
 
-                            return (placement, model)
-                        } else {
-                            let paywall = try await self.fetchPaywall(for: .defaultPlacement)
-                            let rcConfig = paywall.remoteConfig
-                            let isPaywallBuilderEnabled = paywall.hasViewConfiguration
-                            let products = try await Adapty.getPaywallProducts(paywall: paywall)
-                            let configuration = try? await AdaptyUI.getViewConfiguration(forPaywall: paywall)
-
-                            let model = PremiumManagerModel(paywall: paywall,
-                                                            products: products,
-                                                            rcConfig: rcConfig,
-                                                            isPaywallBuilderEnabled: isPaywallBuilderEnabled,
-                                                            configuration: configuration)
-                            return (placement, model)
+                            return (placement.id, model)
                         }
+                        return (placement.id, nil)
                     }
                 }
 
-                var results: [Placements: PremiumManagerModel] = [:]
+                var results: [String: PremiumManagerModel] = [:]
                 for try await (placement, model) in group {
                     if let model {
                         results[placement] = model
@@ -81,19 +70,20 @@ final class GMPremiumManagerImpl: GMPremiumManager {
         }
     }
 
-    func getPaywall(with placement: Placements) -> PremiumManagerModel? {
-        return paywalls[placement] ?? nil
+    func getPaywall(with placement: any Placements) -> PremiumManagerModel? {
+        return paywalls[placement.id] ?? nil
     }
 
-    func fetchPaywall(for placement: Placements) async throws -> AdaptyPaywall {
-        try await withCheckedThrowingContinuation { continuation in
-            Adapty.getPaywall(placementId: placement.rawValue) { result in
+    func fetchPaywall(for placement: any Placements) async throws -> AdaptyPaywall? {
+        try? await withCheckedThrowingContinuation { continuation in
+            Adapty.getPaywall(placementId: placement.id) { result in
                 switch result {
                 case .success(let paywall):
-                    continuation.resume(returning: paywall)
+//                    continuation.resume(returning: paywall)
+                    break
                 case .failure(let error):
-                    print("Mert123: ", error)
                     continuation.resume(throwing: error)
+                    break
                 }
             }
         }

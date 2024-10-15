@@ -9,7 +9,7 @@ import Adapty
 import AdaptyUI
 
 typealias MappedProduct = AdaptyPaywallProduct
-typealias PremiumManagerPaywall = [Placements: PremiumManagerModel]
+typealias PremiumManagerPaywall = [String: PremiumManagerModel]
 
 struct PremiumManagerModel {
     let paywall: AdaptyPaywall
