@@ -15,7 +15,7 @@ enum PaywallPresenterError: Error {
     case noDynamicPaywall
 }
 
-final class GMAdaptyPaywallPresenter: NSObject {
+final public class GMAdaptyPaywallPresenter: NSObject {
 
     /// Access PremiumManagerModel, will be used for logPaywall function
     func getPaywallModel(with placement: any Placements) throws -> PremiumManagerModel {
@@ -48,7 +48,7 @@ final class GMAdaptyPaywallPresenter: NSObject {
 
 extension GMAdaptyPaywallPresenter: AdaptyPaywallControllerDelegate {
 
-    func paywallController(
+    public func paywallController(
         _ controller: AdaptyPaywallController,
         didPerform action: AdaptyUI.Action
     ) {
@@ -62,21 +62,21 @@ extension GMAdaptyPaywallPresenter: AdaptyPaywallControllerDelegate {
         }
     }
 
-    func paywallController(
+    public func paywallController(
         _ controller: AdaptyPaywallController,
         didSelectProduct product: AdaptyPaywallProduct
     ) {
         PremiumManager.shared.eventPassthrough.send(.apbProductSelect(product))
     }
 
-    func paywallController(
+    public func paywallController(
         _ controller: AdaptyPaywallController,
         didStartPurchase product: AdaptyPaywallProduct
     ) {
         PremiumManager.shared.eventPassthrough.send(.apbDidPurchaseStart(product))
     }
 
-    func paywallController(
+    public func paywallController(
         _ controller: AdaptyPaywallController,
         didFinishPurchase product: AdaptyPaywallProduct,
         purchasedInfo: AdaptyPurchasedInfo
@@ -90,7 +90,7 @@ extension GMAdaptyPaywallPresenter: AdaptyPaywallControllerDelegate {
         }
     }
 
-    func paywallController(
+    public func paywallController(
         _ controller: AdaptyPaywallController,
         didFailPurchase product: AdaptyPaywallProduct,
         error: AdaptyError
@@ -99,18 +99,18 @@ extension GMAdaptyPaywallPresenter: AdaptyPaywallControllerDelegate {
 
     }
 
-    func paywallController(
+    public func paywallController(
         _ controller: AdaptyPaywallController,
         didCancelPurchase product: AdaptyPaywallProduct
     ) {
         PremiumManager.shared.eventPassthrough.send(.apbCancelPurchase(product))
     }
 
-    func paywallControllerDidStartRestore(_ controller: AdaptyPaywallController) {
+    public func paywallControllerDidStartRestore(_ controller: AdaptyPaywallController) {
         PremiumManager.shared.eventPassthrough.send(.apbRestoreStart)
     }
 
-    func paywallController(
+    public func paywallController(
         _ controller: AdaptyPaywallController,
         didFinishRestoreWith profile: AdaptyProfile
     ) {
@@ -123,14 +123,14 @@ extension GMAdaptyPaywallPresenter: AdaptyPaywallControllerDelegate {
     }
 
 
-    func paywallController(
+    public func paywallController(
         _ controller: AdaptyPaywallController,
         didFailRestoreWith error: AdaptyError
     ) {
         PremiumManager.shared.eventPassthrough.send(.apbRestoreFailed(error))
     }
 
-    func paywallController(
+    public func paywallController(
         _ controller: AdaptyPaywallController,
         didFailRenderingWith error: AdaptyError
     ) {
@@ -138,7 +138,7 @@ extension GMAdaptyPaywallPresenter: AdaptyPaywallControllerDelegate {
     }
 
 
-    func paywallController(_ controller: AdaptyPaywallController, didFailLoadingProductsWith error: AdaptyError) -> Bool {
+    public func paywallController(_ controller: AdaptyPaywallController, didFailLoadingProductsWith error: AdaptyError) -> Bool {
         return true
     }
 }

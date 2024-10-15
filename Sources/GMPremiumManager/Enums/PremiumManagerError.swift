@@ -7,11 +7,11 @@
 
 import Foundation
 
-enum PremiumManagerError: LocalizedError {
+public enum PremiumManagerError: LocalizedError {
     case noRestore
     case paywallFetchingError
 
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .noRestore:
             return NSLocalizedString(

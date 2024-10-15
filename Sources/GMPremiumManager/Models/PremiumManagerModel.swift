@@ -11,7 +11,7 @@ import AdaptyUI
 typealias MappedProduct = AdaptyPaywallProduct
 typealias PremiumManagerPaywall = [String: PremiumManagerModel]
 
-struct PremiumManagerModel {
+public struct PremiumManagerModel {
     let paywall: AdaptyPaywall
     let products: [AdaptyPaywallProduct]
     let rcConfig: AdaptyPaywall.RemoteConfig?

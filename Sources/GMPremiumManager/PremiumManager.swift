@@ -9,7 +9,7 @@ import Adapty
 import Combine
 import SwiftUI
 
-class PremiumManager: ObservableObject {
+final public class PremiumManager: ObservableObject {
 
     init(key: String, observerMode: Bool = false, idfaCollectionDisabled: Bool = false, customerUserId: String, ipAddressCollectionDisabled: Bool = false, implementation: GMPremiumManager = GMPremiumManagerImpl()) {
 
@@ -105,7 +105,7 @@ class PremiumManager: ObservableObject {
 }
 
 extension PremiumManager: AdaptyDelegate {
-    func didLoadLatestProfile(_ profile: AdaptyProfile) {
+    public func didLoadLatestProfile(_ profile: AdaptyProfile) {
         eventPassthrough.send(.onLoadProfile(profile))
         isPremium = checkSubscriptionStatus(profile: profile)
     }

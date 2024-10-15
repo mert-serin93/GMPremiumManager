@@ -8,7 +8,7 @@
 import Foundation
 import Adapty
 
-final class GMPremiumManagerImpl: GMPremiumManager {
+final public class GMPremiumManagerImpl: GMPremiumManager {
 
     var paywalls: PremiumManagerPaywall = [:]
     var configurationBuilder: Adapty.Configuration.Builder?
