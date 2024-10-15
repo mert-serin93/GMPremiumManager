@@ -31,11 +31,11 @@ final public class PremiumManager: ObservableObject {
         }
     }
 
-    static var shared: PremiumManager!
+    public static var shared: PremiumManager!
     private let implementation: GMPremiumManager
 
-    @Published var isPremium = false
-    var eventPassthrough: PassthroughSubject<Events, Never> = .init()
+    @Published public var isPremium = false
+    public var eventPassthrough: PassthroughSubject<Events, Never> = .init()
 
     public func activate(appInstanceId: String?) async throws {
         try await implementation.activate(appInstanceId: appInstanceId)
@@ -130,7 +130,7 @@ extension PremiumManager {
 }
 
 extension PremiumManager {
-    enum Events {
+    public enum Events {
         case onAdaptyActivate
         case onAdaptyUIActivated
         case onErrorActivate(Error)
