@@ -17,20 +17,22 @@ enum PaywallPresenterError: Error {
 
 final public class GMAdaptyPaywallPresenter: NSObject {
 
+    public static let shared = GMAdaptyPaywallPresenter()
+
     /// Access PremiumManagerModel, will be used for logPaywall function
-    func getPaywallModel(with placement: any Placements) throws -> PremiumManagerModel {
+    public func getPaywallModel(with placement: any Placements) throws -> PremiumManagerModel {
         guard let model = PremiumManager.shared.getPaywall(with: placement) else { throw PaywallPresenterError.noPaywall }
         return model
     }
 
     /// Access Adapty's Paywall Builder paywall as SwiftUI View, logPaywall needs to call seperately
-    func getPaywallSwiftUI(from model: PremiumManagerModel) throws -> some View {
+    public func getPaywallSwiftUI(from model: PremiumManagerModel) throws -> some View {
         let viewController = try getPaywallViewController(from: model)
         return viewController.toSwiftUI()
     }
 
     /// Access Adapty's Paywall Builder paywall, logPaywall needs to call seperately
-    func getPaywallViewController(from model: PremiumManagerModel) throws -> UIViewController {
+    public func getPaywallViewController(from model: PremiumManagerModel) throws -> UIViewController {
 
         if !model.isPaywallBuilderEnabled { throw PaywallPresenterError.noDynamicPaywall }
         guard let configuration = model.configuration else { throw PaywallPresenterError.noPaywallConfiguration }
@@ -39,7 +41,7 @@ final public class GMAdaptyPaywallPresenter: NSObject {
         return vc
     }
 
-    func logPaywall(with paywall: AdaptyPaywall) {
+    public func logPaywall(with paywall: AdaptyPaywall) {
         Task {
             try await PremiumManager.shared.logPaywallOpen(for: paywall)
         }
