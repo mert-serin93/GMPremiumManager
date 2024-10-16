@@ -44,16 +44,22 @@ final public class PremiumManager: ObservableObject {
         }
         do {
             try await implementation.activate(appInstanceId: appInstanceId)
-            eventPassthrough.send(.onAdaptyActivate)
-            eventPassthrough.send(.onAdaptyUIActivated)
+            await MainActor.run {
+                eventPassthrough.send(.onAdaptyActivate)
+                eventPassthrough.send(.onAdaptyUIActivated)
+            }
         } catch {
-            eventPassthrough.send(.onErrorActivate(error))
+            await MainActor.run {
+                eventPassthrough.send(.onErrorActivate(error))
+            }
         }
     }
 
     public func fetchAllPaywalls(for placements: [any Placements]) async throws {
         try await implementation.fetchAllPaywalls(for: placements)
-        eventPassthrough.send(.onFetchPaywalls(implementation.paywalls))
+        await MainActor.run {
+            eventPassthrough.send(.onFetchPaywalls(implementation.paywalls))
+        }
     }
 
     public func getPaywall(with placement: any Placements) -> PremiumManagerModel? {
