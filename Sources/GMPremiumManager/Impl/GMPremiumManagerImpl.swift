@@ -9,9 +9,10 @@ import Foundation
 import Adapty
 
 final public class GMPremiumManagerImpl: GMPremiumManager {
-
     public var paywalls: PremiumManagerPaywall = [:]
     public var configurationBuilder: Adapty.Configuration.Builder?
+
+    private var isAdaptyActivated: Bool = false
 
     public init() {
 
@@ -19,16 +20,21 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
 
     public func activate(appInstanceId: String?) async throws {
         guard let configurationBuilder else { return }
-        try await Adapty.activate(with: configurationBuilder)
+        do {
+            try await Adapty.activate(with: configurationBuilder)
 
-        if let appInstanceId = appInstanceId {
-            let builder = AdaptyProfileParameters.Builder()
-                .with(firebaseAppInstanceId: appInstanceId)
+            if let appInstanceId = appInstanceId {
+                let builder = AdaptyProfileParameters.Builder()
+                    .with(firebaseAppInstanceId: appInstanceId)
 
-            try? await Adapty.updateProfile(params: builder.build())
+                try? await Adapty.updateProfile(params: builder.build())
+            }
+
+            try await AdaptyUI.activate()
+            self.isAdaptyActivated = true
+        } catch {
+            throw error
         }
-
-        try await AdaptyUI.activate()
     }
 
     public func fetchAllPaywalls(for placements: [any Placements]) async throws {
@@ -121,6 +127,10 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
 
     public func checkSubscriptionStatus(profile: AdaptyProfile) -> [String: AdaptyProfile.AccessLevel] {
         return profile.accessLevels
+    }
+
+    public func isActivated() -> Bool {
+        return isAdaptyActivated
     }
 }
 

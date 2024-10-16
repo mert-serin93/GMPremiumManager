@@ -9,6 +9,7 @@ import Adapty
 import Combine
 import SwiftUI
 
+
 final public class PremiumManager: ObservableObject {
 
     public init(key: String, observerMode: Bool = false, idfaCollectionDisabled: Bool = false, customerUserId: String, ipAddressCollectionDisabled: Bool = false, implementation: GMPremiumManager) {
@@ -27,7 +28,7 @@ final public class PremiumManager: ObservableObject {
         if shared == nil {
             shared = PremiumManager(key: key, observerMode: observerMode, idfaCollectionDisabled: idfaCollectionDisabled, customerUserId: customerUserId, ipAddressCollectionDisabled: ipAddressCollectionDisabled, implementation: implementation)
         } else {
-            fatalError("Premium Manager can be initailized only once.")
+            fatalError("Premium Manager can be configured only once.")
         }
     }
 
@@ -38,6 +39,9 @@ final public class PremiumManager: ObservableObject {
     public var eventPassthrough: PassthroughSubject<Events, Never> = .init()
 
     public func activate(appInstanceId: String?) async throws {
+        if implementation.isActivated() {
+            throw PremiumManagerError.alreadyActivated
+        }
         try await implementation.activate(appInstanceId: appInstanceId)
     }
 

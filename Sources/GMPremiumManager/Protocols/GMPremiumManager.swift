@@ -26,4 +26,6 @@ public protocol GMPremiumManager: AnyObject {
     func logPaywallOpen(for paywall: AdaptyPaywall) async throws
 
     func checkSubscriptionStatus(profile: AdaptyProfile) -> [String: AdaptyProfile.AccessLevel]
+
+    func isActivated() -> Bool
 }

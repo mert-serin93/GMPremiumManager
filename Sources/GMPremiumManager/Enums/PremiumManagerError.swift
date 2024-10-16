@@ -10,6 +10,7 @@ import Foundation
 public enum PremiumManagerError: LocalizedError {
     case noRestore
     case paywallFetchingError
+    case alreadyActivated
 
     public var errorDescription: String? {
         switch self {
@@ -23,6 +24,8 @@ public enum PremiumManagerError: LocalizedError {
                 "Something went wrong while fetching paywalls. Please try again.",
                 comment: ""
             )
+        case .alreadyActivated:
+            return "Adapty is activated already."
         }
     }
 }
