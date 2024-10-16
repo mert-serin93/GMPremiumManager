@@ -42,11 +42,18 @@ final public class PremiumManager: ObservableObject {
         if implementation.isActivated() {
             throw PremiumManagerError.alreadyActivated
         }
-        try await implementation.activate(appInstanceId: appInstanceId)
+        do {
+            try await implementation.activate(appInstanceId: appInstanceId)
+            eventPassthrough.send(.onAdaptyActivate)
+            eventPassthrough.send(.onAdaptyUIActivated)
+        } catch {
+            eventPassthrough.send(.onErrorActivate(error))
+        }
     }
 
     public func fetchAllPaywalls(for placements: [any Placements]) async throws {
         try await implementation.fetchAllPaywalls(for: placements)
+        eventPassthrough.send(.onFetchPaywalls(implementation.paywalls))
     }
 
     public func getPaywall(with placement: any Placements) -> PremiumManagerModel? {
