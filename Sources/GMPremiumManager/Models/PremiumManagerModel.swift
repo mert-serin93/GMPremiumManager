@@ -12,9 +12,9 @@ public typealias MappedProduct = AdaptyPaywallProduct
 public typealias PremiumManagerPaywall = [String: PremiumManagerModel]
 
 public struct PremiumManagerModel {
-    let paywall: AdaptyPaywall
-    let products: [AdaptyPaywallProduct]
-    let rcConfig: AdaptyPaywall.RemoteConfig?
-    let isPaywallBuilderEnabled: Bool
-    let configuration: AdaptyUI.LocalizedViewConfiguration?
+    public let paywall: AdaptyPaywall
+    public let products: [AdaptyPaywallProduct]
+    public let rcConfig: AdaptyPaywall.RemoteConfig?
+    public let isPaywallBuilderEnabled: Bool
+    public let configuration: AdaptyUI.LocalizedViewConfiguration?
 }
