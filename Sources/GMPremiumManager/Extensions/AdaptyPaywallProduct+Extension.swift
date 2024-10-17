@@ -21,7 +21,7 @@ extension AdaptyPaywallProduct: @retroactive Identifiable {
     }
 }
 
-extension AdaptyPaywallProduct {
+public extension AdaptyPaywallProduct {
     func weeklyFormattedPrice() -> String? {
         guard let subscriptionPeriodUnit = self.subscriptionPeriod?.unit else { return nil }
 

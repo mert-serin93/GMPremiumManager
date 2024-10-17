@@ -7,7 +7,7 @@
 
 import StoreKit
 
-extension NSNumber {
+public extension NSNumber {
     func getPrice(for priceLocale: Locale) -> String? {
         let formatter = SKProduct.formatter
         formatter.locale = priceLocale

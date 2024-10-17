@@ -8,14 +8,14 @@
 import Foundation
 import StoreKit
 
-extension Collection where Iterator.Element == SKProduct {
+public extension Collection where Iterator.Element == SKProduct {
     func findProduct(by productID: String) -> SKProduct? {
         guard let first = self.filter({$0.id == productID}).first else { fatalError("Can not find \(productID)")}
         return first
     }
 }
 
-extension SKProduct {
+public extension SKProduct {
     static let formatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
