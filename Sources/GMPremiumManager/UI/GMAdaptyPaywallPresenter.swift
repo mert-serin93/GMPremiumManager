@@ -83,6 +83,7 @@ extension GMAdaptyPaywallPresenter: AdaptyPaywallControllerDelegate {
         didFinishPurchase product: AdaptyPaywallProduct,
         purchasedInfo: AdaptyPurchasedInfo
     ) {
+        controller.dismiss(animated: true)
         Task {
             let profile = try await PremiumManager.shared.fetchProfile()
             PremiumManager.shared.didLoadLatestProfile(profile)
@@ -116,6 +117,7 @@ extension GMAdaptyPaywallPresenter: AdaptyPaywallControllerDelegate {
         _ controller: AdaptyPaywallController,
         didFinishRestoreWith profile: AdaptyProfile
     ) {
+        controller.dismiss(animated: true)
         let isPremium = PremiumManager.shared.checkSubscriptionStatus(profile: profile)
         if isPremium {
             PremiumManager.shared.eventPassthrough.send(.apbRestoreSuccessful)
