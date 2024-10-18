@@ -85,10 +85,14 @@ final public class PremiumManager: ObservableObject {
             if let profile = try? await fetchProfile() {
                 let isPremium = self.checkSubscriptionStatus(profile: profile)
                 self.isPremium = isPremium
-                eventPassthrough.send(.onPurchaseCompleted(product, isPremium))
+                await MainActor.run {
+                    eventPassthrough.send(.onPurchaseCompleted(product, isPremium))
+                }
             }
         } catch {
-            eventPassthrough.send(.onPurchaseFailed(error))
+            await MainActor.run {
+                eventPassthrough.send(.onPurchaseFailed(error))
+            }
         }
     }
 
@@ -105,15 +109,30 @@ final public class PremiumManager: ObservableObject {
             let profile = try await implementation.restorePurchases()
             let isPremium = checkSubscriptionStatus(profile: profile)
             self.isPremium = isPremium
-            eventPassthrough.send(.onRestoreCompleted)
+            await MainActor.run {
+                eventPassthrough.send(.onRestoreCompleted)
+            }
         } catch {
-            eventPassthrough.send(.onRestoreFailed(error))
+            await MainActor.run {
+                eventPassthrough.send(.onRestoreFailed(error))
+            }
         }
     }
 
     public func checkSubscriptionStatus(profile: AdaptyProfile) -> Bool {
         let accessLevels = implementation.checkSubscriptionStatus(profile: profile)
         return isPremium(with: accessLevels)
+    }
+
+    public func refreshPremiumState() async throws {
+        let profile = try await fetchProfile()
+        let isPremium = checkSubscriptionStatus(profile: profile)
+        if self.isPremium != isPremium {
+            await MainActor.run {
+                eventPassthrough.send(.onChangePremiumState(oldValue: self.isPremium, newValue: isPremium))
+            }
+        }
+        self.isPremium = isPremium
     }
 
     private func isPremium(with accessLevel: [String: AdaptyProfile.AccessLevel]) -> Bool {
@@ -157,6 +176,8 @@ extension PremiumManager {
 
         case onPurchaseCompleted(AdaptyProduct, Bool)
         case onPurchaseFailed(Error)
+
+        case onChangePremiumState(oldValue: Bool, newValue: Bool)
 
         case onRestoreCompleted
         case onRestoreFailed(Error)
