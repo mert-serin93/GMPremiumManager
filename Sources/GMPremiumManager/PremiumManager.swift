@@ -150,14 +150,14 @@ extension PremiumManager: AdaptyDelegate {
 
 // Helper for Facebook events
 public extension PremiumManager {
-    func shouldSendSubscribeEvent(for product: AdaptyPaywallProduct) -> Bool {
+    func shouldSendSubscribeEvent(for product: AdaptyProduct) -> Bool {
         if let subscriptionPeriod = product.subscriptionPeriod, subscriptionPeriod.unit == .year {
             return true
         }
         return false
     }
 
-    func shouldSendAddToCartFBSDK(for product: AdaptyPaywallProduct) -> Bool {
+    func shouldSendAddToCartFBSDK(for product: AdaptyProduct) -> Bool {
         if let introductoryOfferEligibility = product.introductoryDiscount, introductoryOfferEligibility.paymentMode == .freeTrial {
             return true
         }
