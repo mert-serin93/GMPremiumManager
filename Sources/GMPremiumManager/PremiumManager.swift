@@ -149,7 +149,7 @@ extension PremiumManager: AdaptyDelegate {
 
 
 // Helper for Facebook events
-extension PremiumManager {
+public extension PremiumManager {
     func shouldSendSubscribeEvent(for product: AdaptyPaywallProduct) -> Bool {
         if let subscriptionPeriod = product.subscriptionPeriod, subscriptionPeriod.unit == .year {
             return true
