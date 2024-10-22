@@ -93,6 +93,7 @@ final public class PremiumManager: ObservableObject {
             await MainActor.run {
                 eventPassthrough.send(.onPurchaseFailed(error))
             }
+            throw error
         }
     }
 
@@ -116,6 +117,7 @@ final public class PremiumManager: ObservableObject {
             await MainActor.run {
                 eventPassthrough.send(.onRestoreFailed(error))
             }
+            throw error
         }
     }
 
