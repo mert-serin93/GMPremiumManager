@@ -43,6 +43,15 @@ PremiumManager.shared.eventPassthrough.sink {[weak self] output in
     }.store(in: &storage)
 ```
 
+storage needs to be created where you want to listen these changes. 
+
+You can initialize storage by 
+
+```
+import Combine
+
+var storage = Set<AnyCancellables>()
+```
 
 
 the ones start with APB prefix is for Adapty Paywall Builder events.
