@@ -111,7 +111,11 @@ final public class PremiumManager: ObservableObject {
             let isPremium = checkSubscriptionStatus(profile: profile)
             self.isPremium = isPremium
             await MainActor.run {
-                eventPassthrough.send(.onRestoreCompleted)
+                if isPremium {
+                    eventPassthrough.send(.onRestoreCompleted)
+                } else {
+                    eventPassthrough.send(.onRestoreFailed(PremiumManagerError.noRestore))
+                }
             }
         } catch {
             await MainActor.run {
