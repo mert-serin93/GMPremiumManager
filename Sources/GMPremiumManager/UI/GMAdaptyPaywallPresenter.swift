@@ -117,7 +117,6 @@ extension GMAdaptyPaywallPresenter: AdaptyPaywallControllerDelegate {
         _ controller: AdaptyPaywallController,
         didFinishRestoreWith profile: AdaptyProfile
     ) {
-        controller.dismiss(animated: true)
         let isPremium = PremiumManager.shared.checkSubscriptionStatus(profile: profile)
         if isPremium {
             PremiumManager.shared.eventPassthrough.send(.apbRestoreSuccessful)

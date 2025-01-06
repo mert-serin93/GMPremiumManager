@@ -9,7 +9,6 @@ import Adapty
 import Combine
 import SwiftUI
 
-
 final public class PremiumManager: ObservableObject {
 
     public init(key: String, observerMode: Bool = false, idfaCollectionDisabled: Bool = false, customerUserId: String, ipAddressCollectionDisabled: Bool = false, implementation: GMPremiumManager) {
