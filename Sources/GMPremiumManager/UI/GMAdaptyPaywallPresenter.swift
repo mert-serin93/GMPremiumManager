@@ -26,18 +26,20 @@ final public class GMAdaptyPaywallPresenter: NSObject {
     }
 
     /// Access Adapty's Paywall Builder paywall as SwiftUI View, logPaywall needs to call seperately
+    @MainActor
     public func getPaywallSwiftUI(from model: PremiumManagerModel) throws -> some View {
         let viewController = try getPaywallViewController(from: model)
         return viewController.toSwiftUI()
     }
 
     /// Access Adapty's Paywall Builder paywall, logPaywall needs to call seperately
+    @MainActor
     public func getPaywallViewController(from model: PremiumManagerModel) throws -> UIViewController {
 
         if !model.isPaywallBuilderEnabled { throw PaywallPresenterError.noDynamicPaywall }
         guard let configuration = model.configuration else { throw PaywallPresenterError.noPaywallConfiguration }
 
-        guard let vc = try? AdaptyUI.paywallController(for: model.paywall, viewConfiguration: configuration, delegate: self) else { throw PaywallPresenterError.noDynamicPaywall }
+        guard let vc = try? AdaptyUI.paywallController(with: configuration, delegate: self) else { throw PaywallPresenterError.noDynamicPaywall }
         return vc
     }
 
@@ -78,17 +80,13 @@ extension GMAdaptyPaywallPresenter: AdaptyPaywallControllerDelegate {
         PremiumManager.shared.eventPassthrough.send(.apbDidPurchaseStart(product))
     }
 
-    public func paywallController(
-        _ controller: AdaptyPaywallController,
-        didFinishPurchase product: AdaptyPaywallProduct,
-        purchasedInfo: AdaptyPurchasedInfo
-    ) {
+    public func paywallController(_ controller: AdaptyPaywallController, didFinishPurchase product: any AdaptyPaywallProduct, purchaseResult: AdaptyPurchaseResult) {
         controller.dismiss(animated: true)
         Task {
             let profile = try await PremiumManager.shared.fetchProfile()
             PremiumManager.shared.didLoadLatestProfile(profile)
             await MainActor.run {
-                PremiumManager.shared.eventPassthrough.send(.apbDidPurchaseFinished(product, purchasedInfo))
+                PremiumManager.shared.eventPassthrough.send(.apbDidPurchaseFinished(product, purchaseResult))
             }
         }
     }

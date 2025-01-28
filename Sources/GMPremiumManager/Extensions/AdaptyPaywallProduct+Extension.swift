@@ -8,7 +8,7 @@
 import Adapty
 import Foundation
 
-extension AdaptyPaywallProduct: @retroactive Identifiable {
+extension AdaptyPaywallProduct {
     public var id: String { return self.vendorProductId }
 
     var name: String {
@@ -28,13 +28,13 @@ public extension AdaptyPaywallProduct {
         switch subscriptionPeriodUnit {
         case .month:
             let price = (self.price as NSNumber).doubleValue / 4
-            return (price as NSNumber).getPrice(for: self.skProduct.priceLocale)
+            return (price as NSNumber).getPrice(for: self.sk1Product?.priceLocale)
         case .year:
             let price = (self.price as NSNumber).doubleValue / 52
-            return (price as NSNumber).getPrice(for: self.skProduct.priceLocale)
+            return (price as NSNumber).getPrice(for: self.sk1Product?.priceLocale)
         default: break
         }
 
-        return (price as NSNumber).getPrice(for: self.skProduct.priceLocale)
+        return (price as NSNumber).getPrice(for: self.sk1Product?.priceLocale)
     }
 }

@@ -7,10 +7,11 @@
 
 import Foundation
 import Adapty
+import AdaptyUI
 
 final public class GMPremiumManagerImpl: GMPremiumManager {
     public var paywalls: PremiumManagerPaywall = [:]
-    public var configurationBuilder: Adapty.Configuration.Builder?
+    public var configurationBuilder: AdaptyConfiguration.Builder?
 
     private var isAdaptyActivated: Bool = false
 
@@ -25,8 +26,7 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
 
             if let appInstanceId = appInstanceId {
                 let builder = AdaptyProfileParameters.Builder()
-                    .with(firebaseAppInstanceId: appInstanceId)
-
+                try await Adapty.setIntegrationIdentifier(key: "firebase_app_instance_id", value: appInstanceId)
                 try? await Adapty.updateProfile(params: builder.build())
             }
 
@@ -92,9 +92,9 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
         }
     }
 
-    public func fetchPaywallConfiguration(for paywall: AdaptyPaywall) async throws -> AdaptyUI.LocalizedViewConfiguration {
+    public func fetchPaywallConfiguration(for paywall: AdaptyPaywall) async throws -> AdaptyUI.PaywallConfiguration {
         try await withCheckedThrowingContinuation { continuation in
-            AdaptyUI.getViewConfiguration(forPaywall: paywall, loadTimeout: 15, { result in
+            AdaptyUI.getPaywallConfiguration(forPaywall: paywall, loadTimeout: 15, { result in
                 switch result {
                 case .success(let configuration):
                     continuation.resume(returning: configuration)

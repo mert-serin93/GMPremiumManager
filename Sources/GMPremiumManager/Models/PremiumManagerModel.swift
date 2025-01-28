@@ -16,5 +16,5 @@ public struct PremiumManagerModel {
     public let products: [AdaptyPaywallProduct]
     public let rcConfig: AdaptyPaywall.RemoteConfig?
     public let isPaywallBuilderEnabled: Bool
-    public let configuration: AdaptyUI.LocalizedViewConfiguration?
+    public let configuration: AdaptyUI.PaywallConfiguration?
 }

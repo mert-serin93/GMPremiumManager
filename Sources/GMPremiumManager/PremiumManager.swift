@@ -6,6 +6,7 @@
 //
 
 import Adapty
+import AdaptyUI
 import Combine
 import SwiftUI
 
@@ -14,8 +15,8 @@ final public class PremiumManager: ObservableObject {
     public init(key: String, observerMode: Bool = false, idfaCollectionDisabled: Bool = false, customerUserId: String, ipAddressCollectionDisabled: Bool = false, implementation: GMPremiumManager) {
 
         self.implementation = implementation
-        self.implementation.configurationBuilder = Adapty.Configuration
-            .Builder(withAPIKey: key)
+        self.implementation.configurationBuilder = AdaptyConfiguration
+            .builder(withAPIKey: key)
             .with(observerMode: observerMode)
             .with(idfaCollectionDisabled: idfaCollectionDisabled)
             .with(customerUserId: customerUserId)
@@ -70,7 +71,7 @@ final public class PremiumManager: ObservableObject {
         return paywall
     }
 
-    private func fetchPaywallConfiguration(for paywall: AdaptyPaywall) async throws -> AdaptyUI.LocalizedViewConfiguration {
+    private func fetchPaywallConfiguration(for paywall: AdaptyPaywall) async throws -> AdaptyUI.PaywallConfiguration {
         return try await implementation.fetchPaywallConfiguration(for: paywall)
     }
 
@@ -163,7 +164,7 @@ public extension PremiumManager {
     }
 
     func shouldSendAddToCartFBSDK(for product: AdaptyProduct) -> Bool {
-        if let introductoryOfferEligibility = product.introductoryDiscount, introductoryOfferEligibility.paymentMode == .freeTrial {
+        if let introductoryOfferEligibility = product.sk1Product?.introductoryPrice, introductoryOfferEligibility.paymentMode == .freeTrial {
             return true
         }
         return false
@@ -195,7 +196,7 @@ extension PremiumManager {
         case apbProductSelect(AdaptyPaywallProduct)
 
         case apbDidPurchaseStart(AdaptyPaywallProduct)
-        case apbDidPurchaseFinished(AdaptyPaywallProduct, AdaptyPurchasedInfo)
+        case apbDidPurchaseFinished(AdaptyPaywallProduct, AdaptyPurchaseResult)
 
         case apbDidFailedPurchase(AdaptyPaywallProduct, AdaptyError)
         case apbCancelPurchase(AdaptyPaywallProduct)
