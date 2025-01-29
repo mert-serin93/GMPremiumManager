@@ -81,12 +81,19 @@ extension GMAdaptyPaywallPresenter: AdaptyPaywallControllerDelegate {
     }
 
     public func paywallController(_ controller: AdaptyPaywallController, didFinishPurchase product: any AdaptyPaywallProduct, purchaseResult: AdaptyPurchaseResult) {
-        controller.dismiss(animated: true)
-        Task {
-            let profile = try await PremiumManager.shared.fetchProfile()
-            PremiumManager.shared.didLoadLatestProfile(profile)
-            await MainActor.run {
-                PremiumManager.shared.eventPassthrough.send(.apbDidPurchaseFinished(product, purchaseResult))
+        switch purchaseResult {
+        case .userCancelled:
+            PremiumManager.shared.eventPassthrough.send(.apbCancelPurchase(product))
+        case .pending:
+            break
+        case .success(let profile, let transaction):
+            controller.dismiss(animated: true)
+            Task {
+                let profile = try await PremiumManager.shared.fetchProfile()
+                PremiumManager.shared.didLoadLatestProfile(profile)
+                await MainActor.run {
+                    PremiumManager.shared.eventPassthrough.send(.apbDidPurchaseFinished(product, purchaseResult))
+                }
             }
         }
     }
