@@ -22,7 +22,7 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
     public func activate(appInstanceId: String?) async throws {
         guard let configurationBuilder else { return }
         do {
-            try await Adapty.activate(with: configurationBuilder)
+            try await Adapty.activate(with: configurationBuilder.build())
 
             if let appInstanceId = appInstanceId {
                 let builder = AdaptyProfileParameters.Builder()
