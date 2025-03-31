@@ -18,7 +18,7 @@ public protocol GMPremiumManager: AnyObject {
     func fetchPaywall(for placement: any Placements) async throws -> AdaptyPaywall?
     func fetchPaywallConfiguration(for paywall: AdaptyPaywall) async throws -> AdaptyUI.PaywallConfiguration
 
-    func purchase(with product: AdaptyPaywallProduct) async throws
+    func purchase(with product: AdaptyPaywallProduct) async throws -> AdaptyPurchaseResult
     func restorePurchases() async throws -> AdaptyProfile
 
     func fetchProfile() async throws -> AdaptyProfile

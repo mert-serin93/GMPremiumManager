@@ -109,9 +109,9 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
         try await Adapty.logShowPaywall(paywall)
     }
 
-    public func purchase(with product: AdaptyPaywallProduct) async throws {
+    public func purchase(with product: AdaptyPaywallProduct) async throws -> AdaptyPurchaseResult {
         do {
-            try await Adapty.makePurchase(product: product)
+            return try await Adapty.makePurchase(product: product)
         } catch {
             throw error
         }

@@ -81,14 +81,21 @@ final public class PremiumManager: ObservableObject {
 
     public func purchase(with product: AdaptyPaywallProduct, source: String) async throws {
         do {
-            try await implementation.purchase(with: product)
-            if let profile = try? await fetchProfile() {
+            let result = try await implementation.purchase(with: product)
+            switch result {
+            case .userCancelled:
+                eventPassthrough.send(.onPurchaseFailed(PremiumManagerError.userCancelledPurchase))
+                return
+            case .pending:
+                break
+            case .success(let profile, let transaction):
                 let isPremium = self.checkSubscriptionStatus(profile: profile)
                 self.isPremium = isPremium
                 await MainActor.run {
-                    eventPassthrough.send(.onPurchaseCompleted(product, isPremium))
+                    eventPassthrough.send(.onPurchaseCompleted(product, isPremium, transaction))
                 }
             }
+
         } catch {
             await MainActor.run {
                 eventPassthrough.send(.onPurchaseFailed(error))
@@ -180,7 +187,7 @@ extension PremiumManager {
         case onFetchPaywalls(PremiumManagerPaywall)
         case onLoadProfile(AdaptyProfile)
 
-        case onPurchaseCompleted(AdaptyProduct, Bool)
+        case onPurchaseCompleted(AdaptyProduct, Bool, any Sendable)
         case onPurchaseFailed(Error)
 
         case onChangePremiumState(oldValue: Bool, newValue: Bool)

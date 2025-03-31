@@ -11,6 +11,7 @@ public enum PremiumManagerError: LocalizedError {
     case noRestore
     case paywallFetchingError
     case alreadyActivated
+    case userCancelledPurchase
 
     public var errorDescription: String? {
         switch self {
@@ -26,6 +27,8 @@ public enum PremiumManagerError: LocalizedError {
             )
         case .alreadyActivated:
             return "Adapty is activated already."
+        case .userCancelledPurchase:
+            return "User cancelled the purchase."
         }
     }
 }
