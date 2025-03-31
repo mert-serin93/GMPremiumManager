@@ -99,7 +99,7 @@ GMAdaptyPaywallPresenter has two functions getPaywallViewController and getPaywa
 PremiumManager has a function name purchase to start purchase process. Based on result it'll return .onPurchaseCompleted with product and premium Statust or .onPurchaseFailed with an error
 
 ```
-purchase(with product: AdaptyPaywallProduct, source: String)
+PremiumManager.shared.purchase(with product: AdaptyPaywallProduct, source: String)
 ```
 
 
