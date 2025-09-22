@@ -18,7 +18,7 @@ let package = Package(
         .package(
             name: "Adapty",
             url: "https://github.com/adaptyteam/AdaptySDK-iOS",
-            .upToNextMinor(from: "3.4.0")
+            .upToNextMinor(from: "3.11.0")
         )
     ],
     targets: [

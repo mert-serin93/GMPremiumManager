@@ -14,7 +14,7 @@ public typealias PremiumManagerPaywall = [String: PremiumManagerModel]
 public struct PremiumManagerModel {
     public let paywall: AdaptyPaywall
     public let products: [AdaptyPaywallProduct]
-    public let rcConfig: AdaptyPaywall.RemoteConfig?
+    public let rcConfig: AdaptyRemoteConfig?
     public let isPaywallBuilderEnabled: Bool
     public let configuration: AdaptyUI.PaywallConfiguration?
 }
