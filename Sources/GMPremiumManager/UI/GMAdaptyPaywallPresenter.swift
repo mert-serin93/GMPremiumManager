@@ -147,6 +147,11 @@ extension GMAdaptyPaywallPresenter: AdaptyPaywallControllerDelegate {
 
 
     public func paywallController(_ controller: AdaptyPaywallController, didFailLoadingProductsWith error: AdaptyError) -> Bool {
+        PremiumManager.shared.eventPassthrough.send(.apbFailedLoadingProducts(error))
         return true
+    }
+    
+    public func paywallController(_ controller: AdaptyPaywallController, didPartiallyLoadProducts failedIds: [String]) {
+        PremiumManager.shared.eventPassthrough.send(.apbPartiallyLoadedProducts(failedIds))
     }
 }

@@ -214,6 +214,7 @@ extension PremiumManager {
         case apbRestoreFailed(AdaptyError)
 
         case apbFailedRendering(AdaptyError)
-
+        case apbFailedLoadingProducts(AdaptyError)
+        case apbPartiallyLoadedProducts([String])
     }
 }
