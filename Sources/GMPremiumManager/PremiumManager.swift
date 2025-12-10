@@ -55,8 +55,8 @@ final public class PremiumManager: ObservableObject {
         }
     }
 
-    public func fetchAllPaywalls(for placements: [any Placements]) async throws {
-        try await implementation.fetchAllPaywalls(for: placements)
+    public func fetchAllPaywalls(for placements: [any Placements], locale: String? = nil) async throws {
+        try await implementation.fetchAllPaywalls(for: placements, locale: locale)
         await MainActor.run {
             eventPassthrough.send(.onFetchPaywalls(implementation.paywalls))
         }
@@ -66,8 +66,8 @@ final public class PremiumManager: ObservableObject {
         return implementation.paywalls[placement.id] ?? nil
     }
 
-    private func fetchPaywall(for placement: any Placements) async throws -> AdaptyPaywall {
-        guard let paywall = try? await implementation.fetchPaywall(for: placement) else { throw PremiumManagerError.noRestore }
+    private func fetchPaywall(for placement: any Placements, locale: String? = nil) async throws -> AdaptyPaywall {
+        guard let paywall = try? await implementation.fetchPaywall(for: placement, locale: locale) else { throw PremiumManagerError.noRestore }
         return paywall
     }
 

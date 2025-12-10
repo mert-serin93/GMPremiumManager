@@ -37,12 +37,12 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
         }
     }
 
-    public func fetchAllPaywalls(for placements: [any Placements]) async throws {
+    public func fetchAllPaywalls(for placements: [any Placements], locale: String? = nil) async throws {
         do {
             let fetchedPaywalls = try await withThrowingTaskGroup(of: (String, PremiumManagerModel?).self) { group in
                 for placement in placements {
                     group.addTask {
-                        if let paywall = try? await self.fetchPaywall(for: placement) {
+                        if let paywall = try? await self.fetchPaywall(for: placement, locale: locale) {
                             let rcConfig = paywall.remoteConfig
                             let isPaywallBuilderEnabled = paywall.hasViewConfiguration
                             let products = try await Adapty.getPaywallProducts(paywall: paywall)
@@ -79,9 +79,9 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
         return paywalls[placement.id] ?? nil
     }
 
-    public func fetchPaywall(for placement: any Placements) async throws -> AdaptyPaywall? {
+    public func fetchPaywall(for placement: any Placements, locale: String? = nil) async throws -> AdaptyPaywall? {
         try? await withCheckedThrowingContinuation { continuation in
-            Adapty.getPaywall(placementId: placement.id) { result in
+            Adapty.getPaywall(placementId: placement.id, locale: locale) { result in
                 switch result {
                 case .success(let paywall):
                     continuation.resume(returning: paywall)
