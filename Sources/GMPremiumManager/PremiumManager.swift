@@ -10,7 +10,7 @@ import AdaptyUI
 import Combine
 import SwiftUI
 
-final public class PremiumManager: ObservableObject {
+final public class PremiumManager: ObservableObject, @unchecked Sendable {
 
     public init(key: String, observerMode: Bool = false, idfaCollectionDisabled: Bool = false, customerUserId: String, ipAddressCollectionDisabled: Bool = false, implementation: GMPremiumManager) {
 
@@ -36,6 +36,7 @@ final public class PremiumManager: ObservableObject {
     private let implementation: GMPremiumManager
 
     @Published public var isPremium = false
+    @Published public var activeAccessLevels: [String] = []
     public var eventPassthrough: PassthroughSubject<Events, Never> = .init()
 
     public func activate(appInstanceId: String?) async throws {
@@ -55,8 +56,16 @@ final public class PremiumManager: ObservableObject {
         }
     }
 
-    public func fetchAllPaywalls(for placements: [any Placements], locale: String? = nil) async throws {
-        try await implementation.fetchAllPaywalls(for: placements, locale: locale)
+    public func fetchAllPaywalls(
+        for placements: [any Placements],
+        locale: String? = nil,
+        flowConfigurationOptions: PremiumManagerFlowConfigurationOptions = .default
+    ) async throws {
+        try await implementation.fetchAllPaywalls(
+            for: placements,
+            locale: locale,
+            flowConfigurationOptions: flowConfigurationOptions
+        )
         await MainActor.run {
             eventPassthrough.send(.onFetchPaywalls(implementation.paywalls))
         }
@@ -66,16 +75,26 @@ final public class PremiumManager: ObservableObject {
         return implementation.paywalls[placement.id] ?? nil
     }
 
-    private func fetchPaywall(for placement: any Placements, locale: String? = nil) async throws -> AdaptyPaywall {
+    private func fetchPaywall(for placement: any Placements, locale: String? = nil) async throws -> AdaptyFlow {
         guard let paywall = try? await implementation.fetchPaywall(for: placement, locale: locale) else { throw PremiumManagerError.noRestore }
         return paywall
     }
 
-    private func fetchPaywallConfiguration(for paywall: AdaptyPaywall) async throws -> AdaptyUI.PaywallConfiguration {
-        return try await implementation.fetchPaywallConfiguration(for: paywall)
+    private func fetchPaywallConfiguration(
+        for paywall: AdaptyFlow,
+        locale: String? = nil,
+        products: [AdaptyPaywallProduct]? = nil,
+        flowConfigurationOptions: PremiumManagerFlowConfigurationOptions = .default
+    ) async throws -> AdaptyUI.FlowConfiguration {
+        return try await implementation.fetchPaywallConfiguration(
+            for: paywall,
+            locale: locale,
+            products: products,
+            flowConfigurationOptions: flowConfigurationOptions
+        )
     }
 
-    public func logPaywallOpen(for paywall: AdaptyPaywall) async throws {
+    public func logPaywallOpen(for paywall: AdaptyFlow) async throws {
         try await implementation.logPaywallOpen(for: paywall)
     }
 
@@ -91,6 +110,7 @@ final public class PremiumManager: ObservableObject {
             case .success(let profile, let transaction):
                 let isPremium = self.checkSubscriptionStatus(profile: profile)
                 self.isPremium = isPremium
+                self.activeAccessLevels = getActiveAccessLevels(in: profile)
                 await MainActor.run {
                     eventPassthrough.send(.onPurchaseCompleted(product, isPremium, transaction))
                 }
@@ -117,6 +137,7 @@ final public class PremiumManager: ObservableObject {
             let profile = try await implementation.restorePurchases()
             let isPremium = checkSubscriptionStatus(profile: profile)
             self.isPremium = isPremium
+            self.activeAccessLevels = getActiveAccessLevels(in: profile)
             await MainActor.run {
                 if isPremium {
                     eventPassthrough.send(.onRestoreCompleted)
@@ -137,19 +158,70 @@ final public class PremiumManager: ObservableObject {
         return isPremium(with: accessLevels)
     }
 
+    /// Check if a specific access level is active
+    /// - Parameter level: The access level identifier to check (e.g., "premium", "pro", "vip")
+    /// - Parameter profile: The Adapty profile to check against
+    /// - Returns: True if the specified access level exists and is active
+    public func hasAccessLevel(_ level: String, in profile: AdaptyProfile) -> Bool {
+        let accessLevels = implementation.checkSubscriptionStatus(profile: profile)
+        return accessLevels[level]?.isActive ?? false
+    }
+
+    /// Check if a specific access level is active by fetching the latest profile
+    /// - Parameter level: The access level identifier to check (e.g., "premium", "pro", "vip")
+    /// - Returns: True if the specified access level exists and is active
+    public func hasAccessLevel(_ level: String) async throws -> Bool {
+        let profile = try await fetchProfile()
+        return hasAccessLevel(level, in: profile)
+    }
+
+    /// Get all currently active access level identifiers from a profile
+    /// - Parameter profile: The Adapty profile to check
+    /// - Returns: Array of active access level identifiers
+    public func getActiveAccessLevels(in profile: AdaptyProfile) -> [String] {
+        let accessLevels = implementation.checkSubscriptionStatus(profile: profile)
+        return accessLevels.filter { $0.value.isActive }.map { $0.key }
+    }
+
+    /// Get all currently active access level identifiers by fetching the latest profile
+    /// - Returns: Array of active access level identifiers
+    public func getActiveAccessLevels() async throws -> [String] {
+        let profile = try await fetchProfile()
+        return getActiveAccessLevels(in: profile)
+    }
+
+    /// Get detailed information about a specific access level
+    /// - Parameter level: The access level identifier
+    /// - Parameter profile: The Adapty profile to check
+    /// - Returns: The access level details if it exists, nil otherwise
+    public func getAccessLevel(_ level: String, in profile: AdaptyProfile) -> AdaptyProfile.AccessLevel? {
+        let accessLevels = implementation.checkSubscriptionStatus(profile: profile)
+        return accessLevels[level]
+    }
+
+    /// Get detailed information about a specific access level by fetching the latest profile
+    /// - Parameter level: The access level identifier
+    /// - Returns: The access level details if it exists, nil otherwise
+    public func getAccessLevel(_ level: String) async throws -> AdaptyProfile.AccessLevel? {
+        let profile = try await fetchProfile()
+        return getAccessLevel(level, in: profile)
+    }
+
     public func refreshPremiumState() async throws {
         let profile = try await fetchProfile()
         let isPremium = checkSubscriptionStatus(profile: profile)
+        let newActiveAccessLevels = getActiveAccessLevels(in: profile)
         if self.isPremium != isPremium {
             await MainActor.run {
                 eventPassthrough.send(.onChangePremiumState(oldValue: self.isPremium, newValue: isPremium))
             }
         }
         self.isPremium = isPremium
+        self.activeAccessLevels = newActiveAccessLevels
     }
 
     private func isPremium(with accessLevel: [String: AdaptyProfile.AccessLevel]) -> Bool {
-        return accessLevel["premium"]?.isActive ?? false
+        return accessLevel["premium"]?.isActive == true || accessLevel["premium-plus"]?.isActive == true
     }
 }
 
@@ -157,6 +229,7 @@ extension PremiumManager: AdaptyDelegate {
     public func didLoadLatestProfile(_ profile: AdaptyProfile) {
         eventPassthrough.send(.onLoadProfile(profile))
         isPremium = checkSubscriptionStatus(profile: profile)
+        activeAccessLevels = getActiveAccessLevels(in: profile)
     }
 }
 
@@ -171,7 +244,8 @@ public extension PremiumManager {
     }
 
     func shouldSendAddToCartFBSDK(for product: AdaptyProduct) -> Bool {
-        if let introductoryOfferEligibility = product.sk1Product?.introductoryPrice, introductoryOfferEligibility.paymentMode == .freeTrial {
+        if let introductoryOfferEligibility = product.skProduct.subscription?.introductoryOffer,
+           introductoryOfferEligibility.paymentMode == .freeTrial {
             return true
         }
         return false
@@ -196,6 +270,8 @@ extension PremiumManager {
         case onRestoreFailed(Error)
 
         // Adapty Paywall Builder Events
+        case apbDidAppear(UIViewController)
+        case apbDidDisappear(UIViewController)
         case apbCloseTapped(UIViewController)
         case apbOpenURL(URL)
         case apbCustomEvent(String)
@@ -213,8 +289,10 @@ extension PremiumManager {
         case apbNoRestoreAvailable
         case apbRestoreFailed(AdaptyError)
 
-        case apbFailedRendering(AdaptyError)
+        case apbFailedRendering(AdaptyUIError)
         case apbFailedLoadingProducts(AdaptyError)
         case apbPartiallyLoadedProducts([String])
+        case apbDidFinishWebPaymentNavigation(AdaptyPaywallProduct?, AdaptyError?)
+        case apbDidReceiveAnalyticEvent(String, [String: any Sendable])
     }
 }

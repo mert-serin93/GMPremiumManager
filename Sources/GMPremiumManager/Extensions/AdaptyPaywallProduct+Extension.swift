@@ -24,7 +24,7 @@ extension AdaptyPaywallProduct {
 public extension AdaptyPaywallProduct {
     func weeklyFormattedPrice() -> String? {
         guard let subscriptionPeriodUnit = self.subscriptionPeriod?.unit else { return nil }
-        let locale = self.sk2Product?.priceFormatStyle.locale
+        let locale = self.skProduct.priceFormatStyle.locale
 
         switch subscriptionPeriodUnit {
         case .month:

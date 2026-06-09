@@ -25,9 +25,7 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
             try await Adapty.activate(with: configurationBuilder.build())
 
             if let appInstanceId = appInstanceId {
-                let builder = AdaptyProfileParameters.Builder()
-                try await Adapty.setIntegrationIdentifier(key: "firebase_app_instance_id", value: appInstanceId)
-                try? await Adapty.updateProfile(params: builder.build())
+                try await Adapty.setIntegrationIdentifier(.firebaseAppInstanceId(appInstanceId))
             }
 
             try await AdaptyUI.activate()
@@ -37,20 +35,29 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
         }
     }
 
-    public func fetchAllPaywalls(for placements: [any Placements], locale: String? = nil) async throws {
+    public func fetchAllPaywalls(
+        for placements: [any Placements],
+        locale: String? = nil,
+        flowConfigurationOptions: PremiumManagerFlowConfigurationOptions = .default
+    ) async throws {
         do {
             let fetchedPaywalls = try await withThrowingTaskGroup(of: (String, PremiumManagerModel?).self) { group in
                 for placement in placements {
                     group.addTask {
                         if let paywall = try? await self.fetchPaywall(for: placement, locale: locale) {
-                            let rcConfig = paywall.remoteConfig
                             let isPaywallBuilderEnabled = paywall.hasViewConfiguration
-                            let products = try await Adapty.getPaywallProducts(paywall: paywall)
-                            let configuration = isPaywallBuilderEnabled ? try? await self.fetchPaywallConfiguration(for: paywall) : nil
+                            let products = try await Adapty.getPaywallProducts(flow: paywall)
+                            let configuration = isPaywallBuilderEnabled ? try? await self.fetchPaywallConfiguration(
+                                for: paywall,
+                                locale: locale,
+                                products: products,
+                                flowConfigurationOptions: flowConfigurationOptions
+                            ) : nil
 
                             let model = PremiumManagerModel(paywall: paywall,
                                                             products: products,
-                                                            rcConfig: rcConfig,
+                                                            rcConfigs: paywall.remoteConfigs,
+                                                            locale: locale,
                                                             isPaywallBuilderEnabled: isPaywallBuilderEnabled,
                                                             configuration: configuration)
 
@@ -79,34 +86,31 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
         return paywalls[placement.id] ?? nil
     }
 
-    public func fetchPaywall(for placement: any Placements, locale: String? = nil) async throws -> AdaptyPaywall? {
-        try? await withCheckedThrowingContinuation { continuation in
-            Adapty.getPaywall(placementId: placement.id, locale: locale) { result in
-                switch result {
-                case .success(let paywall):
-                    continuation.resume(returning: paywall)
-                case .failure(let error):
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
+    public func fetchPaywall(for placement: any Placements, locale: String? = nil) async throws -> AdaptyFlow? {
+        try await Adapty.getFlow(placementId: placement.id)
     }
 
-    public func fetchPaywallConfiguration(for paywall: AdaptyPaywall) async throws -> AdaptyUI.PaywallConfiguration {
-        try await withCheckedThrowingContinuation { continuation in
-            AdaptyUI.getPaywallConfiguration(forPaywall: paywall, loadTimeout: 15, { result in
-                switch result {
-                case .success(let configuration):
-                    continuation.resume(returning: configuration)
-                case .failure(let error):
-                    continuation.resume(throwing: error)
-                }
-            })
-        }
+    public func fetchPaywallConfiguration(
+        for paywall: AdaptyFlow,
+        locale: String? = nil,
+        products: [AdaptyPaywallProduct]? = nil,
+        flowConfigurationOptions: PremiumManagerFlowConfigurationOptions = .default
+    ) async throws -> AdaptyUI.FlowConfiguration {
+        try await AdaptyUI.getFlowConfiguration(
+            forFlow: paywall,
+            locale: locale,
+            loadTimeout: flowConfigurationOptions.loadTimeout,
+            products: products,
+            observerModeResolver: flowConfigurationOptions.observerModeResolver,
+            tagResolver: flowConfigurationOptions.tagResolver,
+            timerResolver: flowConfigurationOptions.timerResolver,
+            assetsResolver: flowConfigurationOptions.assetsResolver,
+            systemRequestsHandler: flowConfigurationOptions.systemRequestsHandler
+        )
     }
 
-    public func logPaywallOpen(for paywall: AdaptyPaywall) async throws {
-        try await Adapty.logShowPaywall(paywall)
+    public func logPaywallOpen(for paywall: AdaptyFlow) async throws {
+        try await Adapty.logShowFlow(paywall)
     }
 
     public func purchase(with product: AdaptyPaywallProduct) async throws -> AdaptyPurchaseResult {
@@ -133,4 +137,3 @@ final public class GMPremiumManagerImpl: GMPremiumManager {
         return isAdaptyActivated
     }
 }
-
