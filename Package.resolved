@@ -1,13 +1,13 @@
 {
-  "originHash" : "268bf958f494840d918aee1e8fa15223f63c46742d2d3d5a74c6b95a7abce46d",
+  "originHash" : "e19efa69132d03c90b797716af727892ade20436482ee3c22eb019bffc269db7",
   "pins" : [
     {
       "identity" : "adaptysdk-ios",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/adaptyteam/AdaptySDK-iOS",
       "state" : {
-        "revision" : "5d67c18595cc84c0b45ebb918176efaa495d8693",
-        "version" : "4.0.0-beta.1"
+        "revision" : "7b58dac8894675cdc11d45588e1ea7dbaf3c25d7",
+        "version" : "4.2.2"
       }
     }
   ],
